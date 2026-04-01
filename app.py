@@ -33,6 +33,10 @@ with col1:
 with col2:
     target_lang = st.selectbox("Translate to", options=list(LANGUAGES.keys()), index=2)
 
+if "translated" not in st.session_state:
+    st.session_state.translated = ""
+    st.session_state.tgt_code = ""
+
 if st.button("Translate", type="primary"):
     if not input_text.strip():
         st.warning("Please enter some text to translate.")
@@ -50,21 +54,24 @@ if st.button("Translate", type="primary"):
                 src_code = LANGUAGES[source_lang]
 
             tgt_code = LANGUAGES[target_lang]
-
             translated = GoogleTranslator(source=src_code, target=tgt_code).translate(input_text)
 
-            st.markdown("### Translation")
-            st.success(translated)
-
-            if st.checkbox("Read translation aloud"):
-                tts = gTTS(text=translated, lang=tgt_code)
-                audio_file = "output.mp3"
-                tts.save(audio_file)
-                st.audio(audio_file, format="audio/mp3")
-                os.remove(audio_file)
+            st.session_state.translated = translated
+            st.session_state.tgt_code = tgt_code
 
         except Exception as e:
             st.error(f"Something went wrong: {e}")
+
+if st.session_state.translated:
+    st.markdown("### Translation")
+    st.success(st.session_state.translated)
+
+    if st.button("Read aloud"):
+        tts = gTTS(text=st.session_state.translated, lang=st.session_state.tgt_code)
+        audio_file = "output.mp3"
+        tts.save(audio_file)
+        st.audio(audio_file, format="audio/mp3")
+        os.remove(audio_file)
 
 st.markdown("---")
 st.caption("Built in Kolkata, India · For everyone who has ever been lost in translation.")
